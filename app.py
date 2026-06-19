@@ -43,7 +43,7 @@ YDL_OPTS = {
     },
     "extractor_args": {"youtube": {"player_client": ["web"]}},
     "js_runtimes": {"node": {}},
-    "format": "bestvideo+bestaudio/best[ext=mp4]/bestvideo+bestaudio/best/best[ext=mp4]/best",
+    "format": "bestvideo*+bestaudio/best",
 }
 
 def _fetch(url: str) -> dict:
