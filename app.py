@@ -132,6 +132,22 @@ async def api_test():
 async def health():
     return {"status":"ok","cache":len(_cache)}
 
+
+@app.get("/api/debug")
+async def api_debug():
+    import subprocess, shutil
+    node = shutil.which("node") or "NOT FOUND"
+    yt = shutil.which("yt-dlp") or "N/A"
+    try:
+        nv = subprocess.check_output(["node","--version"], text=True).strip()
+    except: nv = "error"
+    try:
+        import yt_dlp_ejs
+        ejs = "installed"
+    except: ejs = "NOT INSTALLED"
+    import yt_dlp
+    return {"node_path": node, "node_version": nv, "yt_dlp_version": yt_dlp.version.__version__, "yt_dlp_ejs": ejs}
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     uvicorn.run("app:app", host="0.0.0.0", port=port, log_level="info")
