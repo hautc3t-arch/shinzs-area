@@ -35,18 +35,21 @@ def _fetch(url: str) -> dict:
             return data
 
     # Dùng yt-dlp CLI với --dump-json
+    node_bin = shutil.which("node") or "/usr/bin/node"
     cmd = [
         YTDLP,
         "--cookies", COOKIES,
-        "--js-runtimes", "node",
+        "--js-runtimes", f"node:{node_bin}",
         "--extractor-args", "youtube:player_client=web",
         "--dump-json",
         "--no-playlist",
         "--quiet",
         url,
     ]
+    env = os.environ.copy()
+    env["PATH"] = f"/usr/bin:/usr/local/bin:{env.get('PATH','')}"
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=40)
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=40, env=env)
         if result.returncode != 0:
             err = result.stderr.lower()
             if "private" in err or "unavailable" in err: return {"error": "private"}
