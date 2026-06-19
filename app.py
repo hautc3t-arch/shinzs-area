@@ -9,6 +9,7 @@ import uvicorn
 
 app = FastAPI()
 INDEX = (Path(__file__).parent / "index.html").read_text(encoding="utf-8")
+COOKIES = str(Path(__file__).parent / "cookies.txt")
 executor = ThreadPoolExecutor(max_workers=8)
 _cache: dict = {}
 CACHE_TTL = 300
@@ -29,7 +30,8 @@ YDL_OPTS = {
     "no_warnings": True,
     "skip_download": True,
     "nocheckcertificate": True,
-    "socket_timeout": 20,
+    "socket_timeout": 25,
+    "cookiefile": COOKIES,
     "http_headers": {
         "User-Agent": (
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -122,10 +124,17 @@ async def api_info(url: str = ""):
     result = await loop.run_in_executor(executor, _fetch, url)
     return JSONResponse(result)
 
+@app.get("/api/test")
+async def api_test():
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(
+        executor, _fetch, "https://www.youtube.com/watch?v=ipOT9ruRobc"
+    )
+
 @app.get("/health")
 async def health():
     return {"status":"ok","cache":len(_cache)}
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8080))
+    port = int(os.environ.get("PORT", 10000))
     uvicorn.run("app:app", host="0.0.0.0", port=port, log_level="info")
