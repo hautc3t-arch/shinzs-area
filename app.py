@@ -41,9 +41,8 @@ YDL_OPTS = {
         "Accept-Language": "en-US,en;q=0.9",
         "Referer": "https://www.youtube.com/",
     },
-    "extractor_args": {
-        "youtube": {"player_client": ["android", "web"]}
-    },
+    "extractor_args": {"youtube": {"player_client": ["web"]}},
+    "js_runtimes": {"node": {}},
     "format": "bestvideo+bestaudio/best",
 }
 
@@ -127,9 +126,7 @@ async def api_info(url: str = ""):
 @app.get("/api/test")
 async def api_test():
     loop = asyncio.get_event_loop()
-    return await loop.run_in_executor(
-        executor, _fetch, "https://www.youtube.com/watch?v=ipOT9ruRobc"
-    )
+    return await loop.run_in_executor(executor, _fetch, "https://www.youtube.com/watch?v=dQw4w9WgXcQ")
 
 @app.get("/health")
 async def health():
