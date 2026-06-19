@@ -133,6 +133,24 @@ async def health():
     return {"status":"ok","cache":len(_cache)}
 
 
+
+@app.get("/api/formats")
+async def api_formats():
+    import yt_dlp
+    opts = {
+        "quiet": True, "skip_download": True, "socket_timeout": 25,
+        "cookiefile": COOKIES,
+        "extractor_args": {"youtube": {"player_client": ["web"]}},
+        "js_runtimes": {"node": {}},
+    }
+    try:
+        with yt_dlp.YoutubeDL(opts) as ydl:
+            info = ydl.extract_info("https://www.youtube.com/watch?v=dQw4w9WgXcQ", download=False)
+        fmts = [{"id":f.get("format_id"),"ext":f.get("ext"),"h":f.get("height"),"vc":f.get("vcodec","")[:8],"ac":f.get("acodec","")[:8],"has_url":bool(f.get("url"))} for f in info.get("formats",[])]
+        return {"total": len(fmts), "formats": fmts}
+    except Exception as e:
+        return {"error": str(e)[:300]}
+
 @app.get("/api/debug")
 async def api_debug():
     import subprocess, shutil
