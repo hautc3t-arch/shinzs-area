@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: shinzs-area
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python app.py
+    envVars:
+      - key: PORT
+        value: 10000
+    healthCheckPath: /health

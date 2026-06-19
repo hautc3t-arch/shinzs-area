@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Shinz's Area · YouTube Downloader</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0F0F0F;--card:#1A1A1A;--inp:#242424;--bor:#2E2E2E;
+  --borf:#C084FC;--pri:#C084FC;--pink:#F472B6;--coral:#FB923C;
+  --tx:#FFF;--tx2:#AAA;--tx3:#666;
+  --ok:#22C55E;--warn:#F59E0B;--err:#EF4444;
+  --bv:#8B5CF6;--ba:#3B82F6;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh}
+.hdr{position:sticky;top:0;z-index:50;background:var(--bg);border-bottom:1px solid var(--bor);height:56px;display:flex;align-items:center}
+.hdr-in{max-width:960px;margin:0 auto;padding:0 20px;width:100%;display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.logo-ic{width:32px;height:32px;background:linear-gradient(135deg,#C084FC,#F472B6,#FB923C);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;color:#fff;position:relative;flex-shrink:0}
+.logo-ic::after{content:'✦';position:absolute;top:-4px;right:-5px;font-size:9px;color:#F472B6}
+.logo-nm{font-size:17px;font-weight:700;background:linear-gradient(90deg,#C084FC,#F472B6);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.nav{display:flex;align-items:center;gap:20px}
+.nav a{font-size:14px;color:var(--tx2);text-decoration:none}
+.nav a:hover{color:var(--tx)}
+.badge-free{font-size:11px;font-weight:600;color:var(--ok);border:1px solid var(--ok);border-radius:9999px;padding:2px 10px}
+main{max-width:960px;margin:0 auto;padding:0 20px}
+.hero{padding:64px 0 40px;display:flex;flex-direction:column;align-items:center;text-align:center;max-width:720px;margin:0 auto}
+.h1{font-size:clamp(1.75rem,4vw,2.5rem);font-weight:700;line-height:1.2;letter-spacing:-.02em;margin-bottom:14px}
+.h1 span{background:linear-gradient(90deg,#C084FC,#F472B6,#FB923C);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.sub{font-size:15px;color:var(--tx2);line-height:1.6;margin-bottom:32px}
+.ibar{width:100%;display:flex;align-items:center;background:var(--inp);border:1px solid var(--bor);border-radius:16px;padding:4px 4px 4px 16px;transition:border-color .2s,box-shadow .2s}
+.ibar:focus-within{border-color:var(--borf);box-shadow:0 0 0 3px rgba(192,132,252,.15)}
+.iico{color:var(--tx3);margin-right:10px;font-size:18px;flex-shrink:0}
+.iinp{flex:1;background:transparent;border:none;outline:none;color:var(--tx);font-family:'Inter',sans-serif;font-size:15px;padding:10px 0}
+.iinp::placeholder{color:var(--tx3)}
+.ibtn{background:linear-gradient(135deg,#C084FC,#F472B6);color:#fff;font-weight:600;font-size:15px;border:none;border-radius:12px;padding:10px 24px;cursor:pointer;transition:opacity .15s,transform .1s;white-space:nowrap;flex-shrink:0}
+.ibtn:hover{opacity:.9}.ibtn:active{transform:scale(.97)}.ibtn:disabled{opacity:.45;cursor:not-allowed}
+.errtxt{font-size:13px;color:var(--err);margin-top:8px;min-height:20px;text-align:left;width:100%}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+.shake{animation:shake .35s ease}
+.ptip{display:none;margin-top:10px;background:var(--card);border:1px solid var(--bor);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--tx2);align-items:center;gap:10px;width:100%}
+.ptip.vis{display:flex}
+.ptip button{background:var(--pri);color:#fff;border:none;border-radius:6px;padding:4px 12px;font-size:12px;font-weight:600;cursor:pointer}
+@keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
+.sk{background:linear-gradient(90deg,#1A1A1A 25%,#2a2a2a 50%,#1A1A1A 75%);background-size:800px 100%;animation:shimmer 1.5s infinite linear;border-radius:6px}
+.skw{display:none;margin-top:28px;background:var(--card);border:1px solid var(--bor);border-radius:16px;padding:24px;gap:16px}
+.skw.vis{display:flex}
+.sk-th{width:160px;height:100px;flex-shrink:0;border-radius:10px}
+.sk-ls{flex:1;display:flex;flex-direction:column;gap:10px;padding-top:4px}
+.sk-ln{height:16px}.sk-rw{height:44px;border-radius:6px;margin-top:8px}
+@keyframes sd{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:translateY(0)}}
+.res{display:none;margin-top:28px;background:var(--card);border:1px solid var(--bor);border-radius:16px;padding:24px;animation:sd .3s ease}
+.res.vis{display:block}
+.vinfo{display:flex;gap:18px;margin-bottom:20px}
+.twrap{position:relative;flex-shrink:0}
+.thumb{width:160px;border-radius:10px;object-fit:cover;display:block}
+.dur{position:absolute;bottom:6px;right:6px;background:rgba(0,0,0,.78);color:var(--tx);font-family:'JetBrains Mono',monospace;font-size:12px;border-radius:6px;padding:2px 6px}
+.vtitle{font-size:17px;font-weight:600;line-height:1.35;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.vmeta{font-size:13px;color:var(--tx2)}
+.tabs{display:flex;border-bottom:1px solid var(--bor);margin-bottom:8px}
+.tab{background:none;border:none;cursor:pointer;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:var(--tx3);padding:10px 16px;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .15s,border-color .15s}
+.tab.act{color:var(--tx);border-bottom-color:var(--pri)}
+.frow{display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--bor);padding:12px 4px;transition:background .12s}
+.frow:last-child{border-bottom:none}
+.frow:hover{background:rgba(255,255,255,.03);border-radius:6px}
+.bdg{font-size:11px;font-weight:600;color:#fff;border-radius:9999px;padding:2px 10px;white-space:nowrap;flex-shrink:0}
+.bv{background:var(--bv)}.ba{background:var(--ba)}
+.fext{font-size:13px;color:var(--tx2);width:52px;flex-shrink:0}
+.fsz{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--tx3);flex:1}
+.rec{font-size:11px;color:var(--ok);margin-left:2px;white-space:nowrap}
+.dlb{background:transparent;border:1px solid var(--bor);color:var(--tx2);border-radius:6px;padding:6px 14px;font-size:13px;font-family:'Inter',sans-serif;cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s,color .15s;text-decoration:none;display:inline-block}
+.dlb:hover{background:var(--inp);border-color:var(--pri);color:var(--tx)}
+/* service note */
+.svc-note{font-size:12px;color:var(--tx3);margin-top:14px;padding-top:14px;border-top:1px solid var(--bor);line-height:1.6}
+.svc-note a{color:var(--pri);text-decoration:none}.svc-note a:hover{text-decoration:underline}
+/* direct link row */
+.crow{display:flex;align-items:center;gap:10px;margin-top:14px}
+.curl{flex:1;background:var(--bg);border:1px solid var(--bor);border-radius:10px;padding:9px 12px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cbtn{background:transparent;border:1px solid var(--bor);color:var(--tx2);border-radius:10px;padding:8px 14px;font-size:13px;cursor:pointer;transition:background .15s,color .15s;white-space:nowrap;font-family:'Inter',sans-serif}
+.cbtn:hover{background:var(--inp);color:var(--tx)}
+.cbtn.copied{color:var(--ok);border-color:var(--ok)}
+.errp{display:none;margin-top:28px;background:var(--card);border:1px solid var(--bor);border-radius:16px;padding:36px 24px;text-align:center;flex-direction:column;align-items:center;gap:12px;animation:sd .3s ease}
+.errp.vis{display:flex}
+.eico{font-size:36px}.etit{font-size:16px;font-weight:600}.esub{font-size:14px;color:var(--tx2)}
+.rtrybtn{background:var(--inp);border:1px solid var(--bor);color:var(--tx);border-radius:10px;padding:9px 20px;font-size:14px;cursor:pointer;font-family:'Inter',sans-serif;margin-top:4px}
+.ban{display:none;margin-top:16px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.35);border-radius:10px;padding:12px 16px;font-size:13px;color:var(--warn);line-height:1.5}
+.ban.vis{display:block}
+.hist{margin-top:40px;border-top:1px solid var(--bor);padding:28px 0 48px}
+.hhead{display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;margin-bottom:16px}
+.hhead h3{font-size:15px;font-weight:600}
+.hchev{color:var(--tx3);transition:transform .2s}.hchev.open{transform:rotate(180deg)}
+.hitems{display:flex;flex-direction:column;gap:4px}
+.hitem{display:flex;align-items:center;gap:12px;padding:10px 8px;border-radius:10px;cursor:pointer;transition:background .12s}
+.hitem:hover{background:rgba(255,255,255,.04)}
+.hth{width:72px;height:46px;border-radius:6px;object-fit:cover;flex-shrink:0}
+.hinf{flex:1;overflow:hidden}
+.htit{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hmet{font-size:11px;color:var(--tx3);margin-top:2px}
+.hdel{background:none;border:none;color:var(--tx3);font-size:16px;cursor:pointer;padding:4px 8px;opacity:0;transition:opacity .15s,color .15s}
+.hitem:hover .hdel{opacity:1}.hdel:hover{color:var(--err)}
+.hemp{font-size:13px;color:var(--tx3);padding:16px 0;text-align:center}
+.hclr{font-size:12px;color:var(--tx3);cursor:pointer}.hclr:hover{color:var(--err)}
+#toast{position:fixed;bottom:24px;right:24px;z-index:999;background:var(--card);border:1px solid var(--bor);border-radius:16px;padding:12px 18px;display:flex;align-items:center;gap:10px;font-size:14px;color:var(--tx);transform:translateY(20px);opacity:0;transition:transform .25s,opacity .25s;pointer-events:none}
+#toast.show{transform:translateY(0);opacity:1}
+.ftr{height:56px;border-top:1px solid var(--bor);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--tx3)}
+.ftr a{color:var(--tx3);text-decoration:none}.ftr a:hover{color:var(--tx2)}
+@media(max-width:600px){
+  .nav{display:none}.hero{padding:36px 0 24px}
+  .ibar{flex-wrap:wrap;padding:8px}.ibtn{width:100%;margin-top:6px;padding:12px;border-radius:10px}
+  .iinp{padding:6px 0}.thumb{width:100%;max-height:180px}.vinfo{flex-direction:column}
+}
+</style>
+</head>
+<body>
+<header class="hdr">
+  <div class="hdr-in">
+    <a href="#" class="logo" onclick="return false">
+      <div class="logo-ic">S</div>
+      <span class="logo-nm">Shinz's Area</span>
+    </a>
+    <nav class="nav">
+      <a href="#">How it works</a>
+      <a href="#">About</a>
+      <span class="badge-free">Free</span>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <h1 class="h1">Tải video <span>YouTube</span><br>theo cách của bạn</h1>
+    <p class="sub">Dán link YouTube, nhấn Get Link, chọn dịch vụ tải về.<br>Không cần đăng nhập.</p>
+    <div class="ibar" id="ibar">
+      <span class="iico">🔗</span>
+      <input id="url" class="iinp" type="text" placeholder="Dán link YouTube vào đây..." autocomplete="off" spellcheck="false"/>
+      <button class="ibtn" id="btn" onclick="doFetch()">Get Link</button>
+    </div>
+    <div class="errtxt" id="errtxt"></div>
+    <div class="ptip" id="ptip">
+      📋 Phát hiện link YouTube trong clipboard —
+      <button onclick="pasteClip()">Dán ngay</button>
+    </div>
+  </section>
+
+  <div class="skw" id="sk">
+    <div class="sk sk-th"></div>
+    <div class="sk-ls">
+      <div class="sk sk-ln" style="width:80%"></div>
+      <div class="sk sk-ln" style="width:55%"></div>
+      <div class="sk sk-rw"></div><div class="sk sk-rw"></div><div class="sk sk-rw"></div>
+    </div>
+  </div>
+
+  <section class="res" id="res">
+    <div class="vinfo">
+      <div class="twrap">
+        <img class="thumb" id="rthumb" src="" alt=""
+          onerror="this.src='https://i.ytimg.com/vi/'+window._vid+'/hqdefault.jpg'"/>
+        <span class="dur" id="rdur"></span>
+      </div>
+      <div>
+        <div class="vtitle" id="rtitle"></div>
+        <div class="vmeta" id="rmeta"></div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab act" data-t="all"   onclick="switchTab('all')">Tất cả</button>
+      <button class="tab"     data-t="video" onclick="switchTab('video')">Video</button>
+      <button class="tab"     data-t="audio" onclick="switchTab('audio')">Audio</button>
+    </div>
+    <div id="flist"></div>
+
+    
+
+    <div class="crow">
+      <div class="curl" id="curl"></div>
+      <button class="cbtn" id="cbtn" onclick="copyYtUrl()">📋 Copy link</button>
+    </div>
+  </section>
+
+  <div class="errp" id="errp">
+    <div class="eico" id="eico">⚡</div>
+    <div class="etit" id="etit">Đã xảy ra lỗi</div>
+    <div class="esub" id="esub">Vui lòng thử lại.</div>
+    <button class="rtrybtn" onclick="reset()">Thử link khác</button>
+  </div>
+  <div class="ban" id="ban">⚠️ Đây là link playlist. Chỉ hỗ trợ video đơn lẻ.</div>
+
+  <section class="hist">
+    <div class="hhead" onclick="togHist()">
+      <h3>Đã xem gần đây</h3>
+      <div style="display:flex;align-items:center;gap:16px">
+        <span class="hclr" onclick="event.stopPropagation();clrHist()">Xoá tất cả</span>
+        <span class="hchev" id="hchev">▾</span>
+      </div>
+    </div>
+    <div id="hitems" class="hitems"></div>
+  </section>
+</main>
+
+<footer class="ftr">
+  © 2025 Shinz's Area · <a href="#">Chính sách</a> · <a href="#">Liên hệ</a>
+</footer>
+<div id="toast"><span id="tico">✓</span> <span id="tmsg"></span></div>
+
+<script>
+// ── state ─────────────────────────────────────────────────────────────────────
+let _vid = '', _fmts = [], _ctab = 'all', _histOpen = true, _clipUrl = null;
+
+// ── fetch từ backend /api/info (yt-dlp thật) ────────────────────────────────
+async function fetchYT(url) {
+  const vid = extractVid(url);
+  if (!vid) return { error: 'invalid_url' };
+  _vid = vid; window._vid = vid;
+  try {
+    const r = await fetch('/api/info?url=' + encodeURIComponent(url));
+    const d = await r.json();
+    if (d.error) return d;
+    d.vid = vid;
+    d.yt_url = `https://www.youtube.com/watch?v=${vid}`;
+    return d;
+  } catch(e) {
+    return { error: 'network' };
+  }
+}
+
+// ── main flow ─────────────────────────────────────────────────────────────────
+async function doFetch() {
+  const url = document.getElementById('url').value.trim();
+  clrErr();
+  if (!url) { showErr('Vui lòng nhập link trước nhé.'); shake(); return; }
+  if (!isYT(url)) { showErr('Link không hợp lệ. Vui lòng dán link YouTube.'); shake(); return; }
+
+  setLoad(true);
+  const d = await fetchYT(url);
+  setLoad(false);
+  handle(d, url);
+}
+
+document.getElementById('url').addEventListener('keydown', e => { if (e.key==='Enter') doFetch(); });
+
+function handle(d, url) {
+  if (d.error) {
+    const m = {
+      invalid_url: ['🔗','Link không hợp lệ','Hãy dán đúng link YouTube.'],
+      private:     ['🔒','Video không khả dụng','Video này ở chế độ riêng tư hoặc đã bị xoá.'],
+      network:     ['⚡','Không thể tải thông tin','Kiểm tra kết nối và thử lại.'],
+      playlist:    [null,null,null],
+    };
+    if (d.error==='playlist') { vis('ban'); return; }
+    const [i,t,s] = m[d.error] || ['⚠️','Lỗi','Thử lại nhé.'];
+    if (i) showErrPanel(i,t,s);
+    return;
+  }
+
+  _fmts = d.formats;
+  renderFmts();
+
+  const th = document.getElementById('rthumb');
+  th.src = d.thumbnail;
+  document.getElementById('rtitle').textContent = d.title;
+  document.getElementById('rdur').textContent = d.duration !== '—' ? d.duration : '';
+  document.getElementById('rmeta').textContent = `${d.channel}`;
+  document.getElementById('curl').textContent = d.yt_url;
+
+  vis('res');
+
+  saveHist({ title: d.title, channel: d.channel, thumbnail: d.thumbnail, vid: d.vid, url });
+  renderHist();
+}
+
+function renderFmts() {
+  const el = document.getElementById('flist'); el.innerHTML = '';
+  let first = true;
+  _fmts.forEach(f => {
+    if (_ctab==='video' && f.type==='audio') return;
+    if (_ctab==='audio' && f.type!=='audio') return;
+    const isA = f.type==='audio';
+    const row = document.createElement('div'); row.className='frow';
+    row.innerHTML = `
+      <span class="bdg ${isA?'ba':'bv'}">${f.quality}</span>
+      ${first&&!isA?'<span class="rec">● Tốt nhất</span>':''}
+      <span class="fext">${f.ext}</span>
+      <span class="fsz">${f.size} &nbsp; ${f.fps}</span>
+      <a class="dlb" href="${esc(f.url)}" target="_blank" rel="noopener">⬇ Tải về</a>`;
+    el.appendChild(row);
+    if (!isA) first = false;
+  });
+}
+
+function switchTab(t) {
+  _ctab = t;
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('act', b.dataset.t===t));
+  renderFmts();
+}
+
+function copyYtUrl() {
+  const url = document.getElementById('curl').textContent;
+  if (!url) return;
+  navigator.clipboard.writeText(url).then(() => {
+    const b = document.getElementById('cbtn');
+    b.textContent = '✓ Đã copy'; b.classList.add('copied');
+    toast('✓','Đã sao chép link YouTube!');
+    setTimeout(()=>{ b.textContent='📋 Copy link'; b.classList.remove('copied'); }, 2000);
+  });
+}
+
+// ── history ───────────────────────────────────────────────────────────────────
+function getH(){try{return JSON.parse(localStorage.getItem('sa_h')||'[]')}catch{return[]}}
+function saveHist(it){let h=getH().filter(x=>x.vid!==it.vid);h.unshift(it);if(h.length>20)h=h.slice(0,20);localStorage.setItem('sa_h',JSON.stringify(h))}
+function clrHist(){localStorage.removeItem('sa_h');renderHist()}
+function delHist(vid){localStorage.setItem('sa_h',JSON.stringify(getH().filter(x=>x.vid!==vid)));renderHist()}
+function renderHist(){
+  const h=getH(),el=document.getElementById('hitems');el.innerHTML='';
+  if(!h.length){el.innerHTML='<div class="hemp">🕐 Chưa có lịch sử nào.</div>';return}
+  h.forEach(it=>{
+    const d=document.createElement('div');d.className='hitem';
+    d.onclick=()=>{document.getElementById('url').value=it.url||`https://www.youtube.com/watch?v=${it.vid}`;doFetch()};
+    d.innerHTML=`<img class="hth" src="${esc(it.thumbnail)}" alt="" onerror="this.src='https://i.ytimg.com/vi/${it.vid}/hqdefault.jpg'"/>
+      <div class="hinf"><div class="htit">${esc(it.title)}</div><div class="hmet">${esc(it.channel)}</div></div>
+      <button class="hdel" onclick="event.stopPropagation();delHist('${esc(it.vid)}')">×</button>`;
+    el.appendChild(d);
+  });
+}
+function togHist(){_histOpen=!_histOpen;document.getElementById('hitems').style.display=_histOpen?'':'none';document.getElementById('hchev').classList.toggle('open',_histOpen)}
+
+// ── clipboard ─────────────────────────────────────────────────────────────────
+async function checkClip(){
+  try{const t=await navigator.clipboard.readText();if(isYT(t)){_clipUrl=t;vis('ptip')}}catch{}
+}
+function pasteClip(){if(_clipUrl){document.getElementById('url').value=_clipUrl;hid('ptip');doFetch()}}
+
+// ── helpers ───────────────────────────────────────────────────────────────────
+function setLoad(on){
+  const b=document.getElementById('btn');b.disabled=on;b.textContent=on?'⏳':'Get Link';
+  if(on){hid('res');hid('errp');hid('ban');vis('sk')}else{hid('sk')}
+}
+function clrErr(){document.getElementById('errtxt').textContent=''}
+function showErr(m){document.getElementById('errtxt').textContent=m}
+function shake(){const b=document.getElementById('ibar');b.classList.add('shake');b.addEventListener('animationend',()=>b.classList.remove('shake'),{once:true})}
+function showErrPanel(i,t,s){document.getElementById('eico').textContent=i;document.getElementById('etit').textContent=t;document.getElementById('esub').textContent=s;vis('errp')}
+function reset(){hid('errp');hid('res');hid('ban');document.getElementById('url').value='';clrErr()}
+function vis(id){document.getElementById(id).classList.add('vis')}
+function hid(id){document.getElementById(id).classList.remove('vis')}
+function toast(i,m){const t=document.getElementById('toast');document.getElementById('tico').textContent=i;document.getElementById('tmsg').textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500)}
+function isYT(u){return/(youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)[\w\-]+/i.test(u)}
+function extractVid(u){const m=u.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);return m?m[1]:null}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+window.addEventListener('load',()=>{renderHist();checkClip()});
+</script>
+</body>
+</html>
