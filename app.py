@@ -8,7 +8,16 @@ import uvicorn
 
 app = FastAPI()
 INDEX = (Path(__file__).parent / "index.html").read_text(encoding="utf-8")
-COOKIES = str(Path(__file__).parent / "cookies.txt")
+# Cookies: ưu tiên Render Secret File (/etc/secrets/cookies.txt), rồi ENV
+# COOKIES_PATH, cuối cùng mới fallback file cạnh app.py (local dev).
+def _resolve_cookies():
+    for c in (os.environ.get("COOKIES_PATH"),
+              "/etc/secrets/cookies.txt",
+              str(Path(__file__).parent / "cookies.txt")):
+        if c and Path(c).is_file():
+            return c
+    return str(Path(__file__).parent / "cookies.txt")
+COOKIES = _resolve_cookies()
 YTDLP = shutil.which("yt-dlp") or "yt-dlp"
 executor = ThreadPoolExecutor(max_workers=8)
 _cache: dict = {}
@@ -40,16 +49,20 @@ def _fetch(url: str) -> dict:
         YTDLP,
         "--cookies", COOKIES,
         "--js-runtimes", f"node:{node_bin}",
-        "--extractor-args", "youtube:player_client=web",
+        # KHÔNG ép player_client=web. 'web' bắt buộc giải n-signature (hay fail
+        # trên IP datacenter -> "Signature solving failed"). Để các client
+        # default/tv/web_safari fallback: tv + default ít/không cần signature.
+        "--extractor-args", "youtube:player_client=default,tv,web_safari",
         "--dump-json",
         "--no-playlist",
+        "--no-warnings",
         "--quiet",
         url,
     ]
     env = os.environ.copy()
     env["PATH"] = f"/usr/bin:/usr/local/bin:{env.get('PATH','')}"
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=40, env=env)
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=60, env=env)
         if result.returncode != 0:
             err = result.stderr.lower()
             if "private" in err or "unavailable" in err: return {"error": "private"}
@@ -61,36 +74,71 @@ def _fetch(url: str) -> dict:
     except Exception as e:
         return {"error": "network", "detail": str(e)[:200]}
 
-    seen, formats = set(), []
-    for f in reversed(info.get("formats", [])):
+    all_fmts = info.get("formats", [])
+
+    # ---- 1) PROGRESSIVE (có sẵn cả video+audio, tải 1 link, không cần merge) ----
+    seen, video_rows = set(), []
+    for f in all_fmts:
         vc, ac, h = f.get("vcodec","none"), f.get("acodec","none"), f.get("height")
-        if vc=="none" or ac=="none" or not h: continue
+        if vc == "none" or ac == "none" or not h: continue
         if not f.get("url"): continue
-        key = (h, f.get("ext",""))
+        key = h
         if key in seen: continue
         seen.add(key)
         fps = f.get("fps")
-        formats.append({
-            "type":"video+audio", "quality":f"{h}p",
-            "ext":f.get("ext","").upper(),
-            "size":human_size(f.get("filesize") or f.get("filesize_approx")),
-            "fps":f"{int(fps)}fps" if fps else "—",
-            "url":f.get("url",""),
+        video_rows.append({
+            "type": "video+audio", "quality": f"{h}p",
+            "ext": f.get("ext","").upper(),
+            "size": human_size(f.get("filesize") or f.get("filesize_approx")),
+            "fps": f"{int(fps)}fps" if fps else "—",
+            "url": f.get("url",""),
+            "_h": h, "_prog": True,
         })
-    for f in reversed(info.get("formats",[])):
+
+    # ---- 2) VIDEO-ONLY DASH (độ phân giải cao: 720/1080/1440/2160) ----
+    # Mỗi link này CHỈ có hình (không tiếng) -> đánh dấu để UI hiển thị rõ.
+    for f in all_fmts:
+        vc, ac, h = f.get("vcodec","none"), f.get("acodec","none"), f.get("height")
+        if vc == "none" or ac != "none" or not h: continue   # video-only
+        if not f.get("url"): continue
+        if h in seen: continue
+        seen.add(h)
+        fps = f.get("fps")
+        video_rows.append({
+            "type": "video", "quality": f"{h}p",
+            "ext": f.get("ext","").upper(),
+            "size": human_size(f.get("filesize") or f.get("filesize_approx")),
+            "fps": f"{int(fps)}fps" if fps else "—",
+            "url": f.get("url",""),
+            "_h": h, "_prog": False,
+        })
+
+    video_rows.sort(key=lambda r: r["_h"], reverse=True)
+    for r in video_rows:
+        r.pop("_h", None); r.pop("_prog", None)
+
+    # ---- 3) AUDIO tốt nhất ----
+    audio_rows = []
+    best_audio = None
+    for f in all_fmts:
         if f.get("vcodec","none") != "none": continue
         if f.get("acodec","none") == "none": continue
         if not f.get("url"): continue
         if f.get("ext","") not in ("m4a","webm","mp3","opus"): continue
-        abr = f.get("abr")
-        formats.append({
-            "type":"audio",
-            "quality":f"{int(abr)}kbps" if abr else "audio",
-            "ext":f.get("ext","").upper(),
-            "size":human_size(f.get("filesize") or f.get("filesize_approx")),
-            "fps":"—", "url":f.get("url",""),
+        abr = f.get("abr") or 0
+        if best_audio is None or abr > (best_audio.get("abr") or 0):
+            best_audio = f
+    if best_audio:
+        abr = best_audio.get("abr")
+        audio_rows.append({
+            "type": "audio",
+            "quality": f"{int(abr)}kbps" if abr else "audio",
+            "ext": best_audio.get("ext","").upper(),
+            "size": human_size(best_audio.get("filesize") or best_audio.get("filesize_approx")),
+            "fps": "—", "url": best_audio.get("url",""),
         })
-        break
+
+    formats = video_rows + audio_rows
 
     dur = info.get("duration", 0) or 0
     data = {
@@ -134,7 +182,7 @@ async def api_debug():
         import yt_dlp_ejs; ejs = "installed"
     except: ejs = "NOT INSTALLED"
     import yt_dlp
-    return {"node": node, "node_v": nv, "ytdlp": yt_dlp.version.__version__, "ejs": ejs, "ytdlp_bin": YTDLP}
+    return {"node": node, "node_v": nv, "ytdlp": yt_dlp.version.__version__, "ejs": ejs, "ytdlp_bin": YTDLP, "cookies": COOKIES, "cookies_exists": Path(COOKIES).is_file()}
 
 @app.get("/health")
 async def health():

@@ -284,6 +284,7 @@ function renderFmts() {
     row.innerHTML = `
       <span class="bdg ${isA?'ba':'bv'}">${f.quality}</span>
       ${first&&!isA?'<span class="rec">● Tốt nhất</span>':''}
+      ${f.type==='video'?'<span class="rec" style="color:var(--warn)">⚠ không tiếng</span>':''}
       <span class="fext">${f.ext}</span>
       <span class="fsz">${f.size} &nbsp; ${f.fps}</span>
       <a class="dlb" href="${esc(f.url)}" target="_blank" rel="noopener">⬇ Tải về</a>`;

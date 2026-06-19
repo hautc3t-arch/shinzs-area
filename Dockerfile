@@ -14,7 +14,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN python3 -c "import yt_dlp_ejs; print('yt-dlp-ejs OK:', yt_dlp_ejs.__file__)"
 RUN node --version && python3 -m yt_dlp --version
 
-COPY app.py index.html cookies.txt ./
+COPY app.py index.html ./
 
 # Test JS runtime detection
 RUN python3 -m yt_dlp --js-runtimes node --version
