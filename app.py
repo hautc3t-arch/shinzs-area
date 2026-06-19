@@ -18,6 +18,9 @@ def _resolve_cookies():
             return c
     return str(Path(__file__).parent / "cookies.txt")
 COOKIES = _resolve_cookies()
+# Residential proxy (vượt chặn IP datacenter). Đặt ENV YTDLP_PROXY trên Render,
+# vd: http://user:pass@host:port  hoặc  socks5://user:pass@host:port
+PROXY = os.environ.get("YTDLP_PROXY", "").strip()
 YTDLP = shutil.which("yt-dlp") or "yt-dlp"
 executor = ThreadPoolExecutor(max_workers=8)
 _cache: dict = {}
@@ -48,6 +51,7 @@ def _fetch(url: str) -> dict:
     cmd = [
         YTDLP,
         "--cookies", COOKIES,
+        *( ["--proxy", PROXY] if PROXY else [] ),
         "--js-runtimes", f"node:{node_bin}",
         # KHÔNG ép player_client=web. 'web' bắt buộc giải n-signature (hay fail
         # trên IP datacenter -> "Signature solving failed"). Để các client
@@ -182,7 +186,7 @@ async def api_debug():
         import yt_dlp_ejs; ejs = "installed"
     except: ejs = "NOT INSTALLED"
     import yt_dlp
-    return {"node": node, "node_v": nv, "ytdlp": yt_dlp.version.__version__, "ejs": ejs, "ytdlp_bin": YTDLP, "cookies": COOKIES, "cookies_exists": Path(COOKIES).is_file()}
+    return {"node": node, "node_v": nv, "ytdlp": yt_dlp.version.__version__, "ejs": ejs, "ytdlp_bin": YTDLP, "cookies": COOKIES, "cookies_exists": Path(COOKIES).is_file(), "proxy_set": bool(PROXY)}
 
 @app.get("/health")
 async def health():
